@@ -2,17 +2,28 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(req: Request) {
   try {
+    // ✅ Create clients at runtime (NOT at build time)
+    const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!STRIPE_SECRET_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json(
+        {
+          error:
+            "Missing server environment variables. Check Vercel env vars for STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const stripe = new Stripe(STRIPE_SECRET_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
     const body = await req.json();
-    const { event_id, quantity = 1, purchaser_email = "" } = body;
+    const { event_id, quantity = 1, purchaser_email = "" } = body || {};
 
     if (!event_id) {
       return NextResponse.json({ error: "Missing event_id" }, { status: 400 });
