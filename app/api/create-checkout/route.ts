@@ -5,6 +5,17 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+export async function GET() {
+  return NextResponse.json(
+    {
+      ok: true,
+      message: "create-checkout endpoint is live. Use POST to create a Stripe Checkout session.",
+    },
+    { status: 200 }
+  );
+}
+
+
 export async function POST(req: Request) {
   try {
     const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
