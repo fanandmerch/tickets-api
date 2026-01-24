@@ -1,10 +1,12 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    // ✅ Create clients at runtime (NOT at build time)
     const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -13,7 +15,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error:
-            "Missing server environment variables. Check Vercel env vars for STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.",
+            "Missing server environment variables. Check Vercel env vars.",
         },
         { status: 500 }
       );
@@ -60,7 +62,7 @@ export async function POST(req: Request) {
           price_data: {
             currency: "usd",
             product_data: { name: `Ticket: ${event.title}` },
-            unit_amount: 7500, // $75.00 per ticket
+            unit_amount: 7500,
           },
           quantity,
         },
