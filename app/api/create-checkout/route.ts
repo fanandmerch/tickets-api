@@ -5,30 +5,58 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+const ALLOWED_ORIGIN =
+  "https://marlons-exceptional-site-82dbe2.webflow.io";
+
+/* -------------------- */
+/* CORS helper */
+/* -------------------- */
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+}
+
+/* -------------------- */
+/* Preflight */
+/* -------------------- */
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders(),
+  });
+}
+
+/* -------------------- */
+/* Health check */
+/* -------------------- */
 export async function GET() {
   return NextResponse.json(
     {
       ok: true,
-      message: "create-checkout endpoint is live. Use POST to create a Stripe Checkout session.",
+      message:
+        "create-checkout endpoint is live. Use POST to create a Stripe Checkout session.",
     },
-    { status: 200 }
+    { headers: corsHeaders() }
   );
 }
 
-
+/* -------------------- */
+/* Checkout */
+/* -------------------- */
 export async function POST(req: Request) {
   try {
     const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
     const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const SUPABASE_SERVICE_ROLE_KEY =
+      process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!STRIPE_SECRET_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json(
-        {
-          error:
-            "Missing server environment variables. Check Vercel env vars.",
-        },
-        { status: 500 }
+        { error: "Missing server environment variables." },
+        { status: 500, headers: corsHeaders() }
       );
     }
 
@@ -39,11 +67,10 @@ export async function POST(req: Request) {
     const { event_id, quantity = 1, purchaser_email = "" } = body || {};
 
     if (!event_id) {
-      return NextResponse.json({ error: "Missing event_id" }, { status: 400 });
-    }
-
-    if (quantity < 1 || quantity > 10) {
-      return NextResponse.json({ error: "Invalid quantity" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing event_id" },
+        { status: 400, headers: corsHeaders() }
+      );
     }
 
     const { data: event, error } = await supabase
@@ -53,15 +80,24 @@ export async function POST(req: Request) {
       .single();
 
     if (error || !event) {
-      return NextResponse.json({ error: "Event not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Event not found" },
+        { status: 404, headers: corsHeaders() }
+      );
     }
 
     if (!event.is_active) {
-      return NextResponse.json({ error: "Event is inactive" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Event is inactive" },
+        { status: 400, headers: corsHeaders() }
+      );
     }
 
     if ((event.tickets_sold || 0) + quantity > event.ticket_limit) {
-      return NextResponse.json({ error: "Sold out" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Sold out" },
+        { status: 400, headers: corsHeaders() }
+      );
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -79,8 +115,9 @@ export async function POST(req: Request) {
         },
       ],
       success_url:
-        "https://button-test-24044f.webflow.io/success?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: "https://button-test-24044f.webflow.io/cancel",
+        "https://marlons-exceptional-site-82dbe2.webflow.io/success?session_id={CHECKOUT_SESSION_ID}",
+      cancel_url:
+        "https://marlons-exceptional-site-82dbe2.webflow.io/cancel",
       metadata: {
         event_id,
         quantity: String(quantity),
@@ -88,9 +125,15 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json(
+      { url: session.url },
+      { headers: corsHeaders() }
+    );
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Server error" },
+      { status: 500, headers: corsHeaders() }
+    );
   }
 }
