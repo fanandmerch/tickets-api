@@ -4,11 +4,15 @@ export async function POST(req: Request) {
   const form = await req.formData();
   const password = String(form.get("password") || "");
 
-  if (!process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ ok: false, error: "Missing ADMIN_PASSWORD env var" }, { status: 500 });
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+  if (!ADMIN_PASSWORD) {
+    return NextResponse.json(
+      { ok: false, error: "Missing ADMIN_PASSWORD env var" },
+      { status: 500 }
+    );
   }
 
-  if (password !== process.env.ADMIN_PASSWORD) {
+  if (password !== ADMIN_PASSWORD) {
     return NextResponse.redirect(new URL("/admin/login?error=1", req.url));
   }
 
@@ -20,5 +24,6 @@ export async function POST(req: Request) {
     path: "/",
     maxAge: 60 * 60 * 8, // 8 hours
   });
+
   return res;
 }

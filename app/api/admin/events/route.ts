@@ -5,11 +5,17 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function GET() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return NextResponse.json({ ok: false, error: "Missing Supabase env vars" }, { status: 500 });
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const supabase = createClient(url, key);
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { ok: false, error: "Missing Supabase env vars" },
+      { status: 500 }
+    );
+  }
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   const { data, error } = await supabase
     .from("events")
@@ -17,6 +23,9 @@ export async function GET() {
     .order("game_date", { ascending: true })
     .limit(50);
 
-  if (error) return NextResponse.json({ ok: false, error }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ ok: false, error }, { status: 500 });
+  }
+
   return NextResponse.json({ ok: true, events: data });
 }
