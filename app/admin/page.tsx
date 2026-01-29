@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default function AdminHome() {
-  const cookieStore = cookies();
+export default async function AdminHome() {
+  const cookieStore = await cookies();
   const authed = cookieStore.get("admin_authed")?.value === "true";
   if (!authed) redirect("/admin/login");
 
@@ -13,7 +13,6 @@ export default function AdminHome() {
 
       <section style={{ marginTop: 24 }}>
         <h2>Events</h2>
-        {/* This loads server-side from our API route */}
         <Events />
       </section>
 
@@ -31,7 +30,8 @@ export default function AdminHome() {
 }
 
 async function Events() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events`, { cache: "no-store" });
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const res = await fetch(`${base}/api/admin/events`, { cache: "no-store" });
   const data = await res.json();
 
   if (!data?.ok) return <pre>{JSON.stringify(data, null, 2)}</pre>;
@@ -65,7 +65,8 @@ async function Events() {
 }
 
 async function Logs() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/logs`, { cache: "no-store" });
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const res = await fetch(`${base}/api/admin/logs`, { cache: "no-store" });
   const data = await res.json();
 
   if (!data?.ok) return <pre>{JSON.stringify(data, null, 2)}</pre>;
@@ -97,7 +98,8 @@ async function Logs() {
 }
 
 async function Analytics() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/analytics`, { cache: "no-store" });
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const res = await fetch(`${base}/api/admin/analytics`, { cache: "no-store" });
   const data = await res.json();
 
   if (!data?.ok) return <pre>{JSON.stringify(data, null, 2)}</pre>;
